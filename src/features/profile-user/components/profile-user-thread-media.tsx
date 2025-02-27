@@ -1,18 +1,25 @@
 import { ThreadEntity } from '@/entities/thread.entities';
 import {
   Box,
-  Link as ChakraLink,
   Grid,
   GridItem,
+  Link as ChakraLink,
   Image,
+  Text,
 } from '@chakra-ui/react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
-type ThreadUserImage = {
+type UserMedia = {
   data: ThreadEntity[] | undefined;
 };
 
-const ProfileMedia = ({ data }: ThreadUserImage) => {
+const ProfileUserThreadMedia = ({ data }: UserMedia) => {
+  const filteredImage = data?.filter((data) => data.images);
+  if (filteredImage?.length == 0) {
+    return <Text>Thread image not found</Text>;
+  }
+
   return (
     <Box mt={4}>
       <Grid templateColumns="repeat(3, 1fr)" gap="3">
@@ -32,4 +39,4 @@ const ProfileMedia = ({ data }: ThreadUserImage) => {
   );
 };
 
-export default ProfileMedia;
+export default ProfileUserThreadMedia;

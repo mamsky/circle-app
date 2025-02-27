@@ -1,23 +1,33 @@
 import { ThreadEntity } from '@/entities/thread.entities';
+import { UserEntity } from '@/entities/user.entities';
 import { api } from '@/hooks/api';
-import { useAuthStore } from '@/stores/auth.store';
 import { SkeletonCard } from '@/utils/skeleton/card.skeleton';
 import { Box, Button, Link as ChakraLink, Flex, Text } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import ProfileCard from './profile-Card';
-import ProfileMedia from './profile-media';
-import ProfilePost from './profile-post';
+import { Link, useParams } from 'react-router-dom';
+import ProfileUserCard from './profile-user-card';
+import ProfileUserThread from './profile-user-thread';
+import ProfileUserThreadMedia from './profile-user-thread-media';
 
-const ProfileComponents = () => {
-  const { user } = useAuthStore();
+const ProfileUserComponents = () => {
   const [buttonChose, setButtonChose] = useState<string>('AllPost');
-  const { isLoading, data } = useQuery<ThreadEntity[]>({
+
+  const { id } = useParams();
+
+  const { data } = useQuery<UserEntity>({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      const response = await api.get(`/users/${id}`);
+      return response.data.data;
+    },
+  });
+
+  const { data: thread, isLoading: loadingThread } = useQuery<ThreadEntity[]>({
     queryKey: ['user-thread'],
     queryFn: async () => {
-      const response = await api.get('/threads/user-threads');
+      const response = await api.get(`/threads/user-threads/${id}`);
       return response.data.data;
     },
   });
@@ -28,11 +38,11 @@ const ProfileComponents = () => {
         <Link to={'/'}>
           <Flex align={'center'} gap={4}>
             <FaArrowLeft size={15} />
-            <Text>{user.profile.fullName}</Text>
+            <Text>{data?.profile?.fullName}</Text>
           </Flex>
         </Link>
       </ChakraLink>
-      <ProfileCard />
+      <ProfileUserCard field={data} />
       {['AllPost', 'Media'].map((button, i) => (
         <Button
           onClick={() => setButtonChose(button)}
@@ -46,16 +56,16 @@ const ProfileComponents = () => {
           {button}
         </Button>
       ))}
-      {isLoading && <SkeletonCard />}
+      {loadingThread && <SkeletonCard />}
       {buttonChose == 'AllPost' ? (
-        <>{data?.map((field) => <ProfilePost key={field.id} data={field} />)}</>
+        thread?.map((field) => (
+          <ProfileUserThread key={field.id} data={field} />
+        ))
       ) : (
-        <>
-          <ProfileMedia data={data} />
-        </>
+        <ProfileUserThreadMedia data={thread} />
       )}
     </Box>
   );
 };
 
-export default ProfileComponents;
+export default ProfileUserComponents;

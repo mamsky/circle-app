@@ -1,4 +1,3 @@
-import LogoImage from '@/assets/image.svg';
 import { Avatar } from '@/components/ui/avatar';
 import {
   DialogBody,
@@ -11,29 +10,29 @@ import { toaster } from '@/components/ui/toaster';
 import { api } from '@/hooks/api';
 import { useAuthStore } from '@/stores/auth.store';
 import {
-  CreateThreadSchema,
-  CreateThreadSchemaDTO,
-} from '@/utils/schemas/thread.schemas';
+  CreateReplySchema,
+  CreateReplySchemaDTO,
+} from '@/utils/schemas/reply.schemas';
 import {
   Box,
   Button,
   DialogActionTrigger,
   Field,
   Flex,
-  Image,
-  Input,
   Textarea,
 } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
-
+type postId = {
+  threadId: string;
+};
 type ThreadResponse = {
   message: string;
 };
-const FormPost = () => {
+const PostReply = ({ threadId }: postId) => {
   const { user } = useAuthStore();
   const {
     register,
@@ -42,28 +41,22 @@ const FormPost = () => {
     reset,
     setValue,
     formState: { errors },
-  } = useForm<CreateThreadSchemaDTO>({
+  } = useForm<CreateReplySchemaDTO>({
     mode: 'onChange',
-    resolver: zodResolver(CreateThreadSchema),
+    resolver: zodResolver(CreateReplySchema),
   });
 
-  const [preview, setPreview] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const { isPending, mutateAsync } = useMutation<
     ThreadResponse,
     Error,
-    CreateThreadSchemaDTO
+    CreateReplySchemaDTO
   >({
-    mutationKey: ['threads'],
-    mutationFn: async (data: CreateThreadSchemaDTO) => {
-      const formData = new FormData();
-
-      formData.append('content', data.content);
-      formData.append('images', data.images[0]);
-
-      const response = await api.post('/threads', formData);
+    mutationKey: ['reply'],
+    mutationFn: async (data: CreateReplySchemaDTO) => {
+      const response = await api.post(`/reply/${threadId}`, data);
 
       return response.data;
     },
@@ -77,11 +70,10 @@ const FormPost = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: ['threads'],
+        queryKey: ['reply'],
       });
       reset({
         content: '',
-        images: new DataTransfer().files,
       });
       toaster.create({
         title: data.message,
@@ -90,21 +82,7 @@ const FormPost = () => {
     },
   });
 
-  const imgPrv = watch('images');
-  useEffect(() => {
-    if (imgPrv && imgPrv.length > 0) {
-      const file = imgPrv[0]; // Ambil file pertama
-      const blob = URL.createObjectURL(file);
-      setPreview(blob);
-
-      // Membersihkan URL blob saat berganti file atau saat komponen unmount
-      return () => URL.revokeObjectURL(blob);
-    } else {
-      setPreview(null); // Reset preview jika tidak ada gambar
-    }
-  }, [imgPrv]); // Dependensi: hanya dijalankan saat images berubah
-
-  const onSubmit = async (data: CreateThreadSchemaDTO) => {
+  const onSubmit = async (data: CreateReplySchemaDTO) => {
     await mutateAsync(data);
     cancelButtonRef.current?.click();
   };
@@ -114,7 +92,7 @@ const FormPost = () => {
       <DialogRoot>
         <Flex gap={4} align={'center'}>
           <Avatar
-            name={user.profile.fullName}
+            name={user.username}
             src={user.profile.avatarUrl || undefined}
           />
           <DialogTrigger asChild>
@@ -125,10 +103,6 @@ const FormPost = () => {
               placeholder="What is happening?!"
             />
           </DialogTrigger>
-
-          <Button bg={'transparent'} disabled>
-            <Image src={LogoImage} w={10} />
-          </Button>
           <Button rounded={'25px'} bg={'brand'} disabled>
             {isPending ? 'Loading...' : 'Post'}
           </Button>
@@ -137,7 +111,10 @@ const FormPost = () => {
         <DialogContent p={'5px 0'}>
           <DialogBody pb="4">
             <Flex gap={2}>
-              <Avatar name="Paste Prosmana" />
+              <Avatar
+                name="Paste Prosmana"
+                src={user.profile.avatarUrl || ''}
+              />
               <Field.Root invalid={!!errors.content?.message}>
                 <Textarea
                   {...register('content')}
@@ -150,28 +127,13 @@ const FormPost = () => {
             </Flex>
           </DialogBody>
           <hr />
-          <Image
-            src={preview || undefined}
-            width="100%"
-            maxH="200px"
-            objectFit="contain"
-          />
           <DialogFooter>
             <DialogActionTrigger asChild>
               <Button ref={cancelButtonRef} hidden variant="outline">
                 Cancel
               </Button>
             </DialogActionTrigger>
-            <Flex w={'100%'} justify={'space-between'}>
-              <label htmlFor="input-image" style={{ cursor: 'pointer' }}>
-                <Image src={LogoImage} w={10} ml={10} />
-              </label>
-              <Input
-                {...register('images')}
-                id="input-image"
-                type="file"
-                hidden
-              />
+            <Flex w={'100%'} justify={'flex-end'}>
               <Button
                 onClick={handleSubmit(onSubmit)}
                 type="submit"
@@ -189,4 +151,4 @@ const FormPost = () => {
   );
 };
 
-export default FormPost;
+export default PostReply;

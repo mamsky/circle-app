@@ -1,32 +1,48 @@
 import { Avatar } from '@/components/ui/avatar';
-import { Reply } from '@/types/post-data-type';
+import { ReplyEntity } from '@/entities/reply.entities';
+import { api } from '@/hooks/api';
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { FaHeart } from 'react-icons/fa';
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
 
-interface CardReplyPost {
-  replyData: Reply;
-}
+const CardReplyContents = () => {
+  const { id } = useParams();
 
-const CardReplyContents = ({ replyData }: CardReplyPost) => {
+  const { data } = useQuery<ReplyEntity[]>({
+    queryKey: ['reply'],
+    queryFn: async () => {
+      const response = await api.get(`/reply/${id}`);
+      return response.data.data;
+    },
+  });
   return (
-    <Box p={2} borderY="1px solid" borderColor={'gray'}>
-      <Flex gap={2}>
-        <Avatar name={replyData.user.fullName} src={replyData.user.avatarUrl} />
-        <Flex direction={'column'}>
-          <Flex gap={2}>
-            <Text>{replyData.user.fullName}</Text>
-            <Text color="gray">@{replyData.user.username}</Text>
-            <Text color="gray">{replyData.createdAt.getHours()}h</Text>
-          </Flex>
-          <Text>{replyData.content}</Text>
-          <Flex my={2} gap={4}>
-            <Text display="flex" alignItems="center" gap={2}>
-              <FaHeart /> {replyData.likesCount}
-            </Text>
-          </Flex>
-        </Flex>
-      </Flex>
-    </Box>
+    <>
+      {data?.map((reply) => (
+        <Box p={2} key={reply.id} borderY="1px solid" borderColor={'gray'}>
+          <>
+            <Flex gap={2}>
+              <Avatar
+                name={reply.user?.username}
+                src={reply.user?.profile?.avatarUrl || ''}
+              />
+              <Flex direction={'column'}>
+                <Flex gap={2}>
+                  <Text>{reply.user?.profile?.fullName}</Text>
+                  <Text color="gray">@{reply.user?.username}</Text>
+                  {/* <Text color="gray">{replyData.createdAt.getHours()}h</Text> */}
+                </Flex>
+                <Text>{reply.content}</Text>
+                {/* <Flex my={2} gap={4}>
+                  <Text display="flex" alignItems="center" gap={2}>
+                    <FaHeart /> {reply.thread?.likesCount}
+                  </Text>
+                </Flex> */}
+              </Flex>
+            </Flex>
+          </>
+        </Box>
+      ))}
+    </>
   );
 };
 

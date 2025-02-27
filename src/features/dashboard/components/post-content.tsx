@@ -1,9 +1,9 @@
+import { ThreadEntity } from '@/entities/thread.entities';
 import { api } from '@/hooks/api';
-import { Post } from '@/types/post-data-type';
+import { SkeletonCard } from '@/utils/skeleton/card.skeleton';
+import { Box, Text } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import CardPostContent from './card-post-content';
-import { Box, Text } from '@chakra-ui/react';
-import { SkeletonCard } from '@/utils/skeleton/card.skeleton';
 
 const PostContent = () => {
   const {
@@ -11,10 +11,10 @@ const PostContent = () => {
     isLoading,
     isError,
     failureReason,
-  } = useQuery<Post[]>({
+  } = useQuery<ThreadEntity[]>({
     queryKey: ['threads'],
     queryFn: async () => {
-      const response = await api.get<{ data: Post[] }>('/threads');
+      const response = await api.get<{ data: ThreadEntity[] }>('/threads');
       return response.data.data;
     },
   });

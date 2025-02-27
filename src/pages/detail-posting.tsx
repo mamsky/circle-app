@@ -1,17 +1,16 @@
 import DetailComponents from '@/features/detail-post/components/detail-components';
-import { Box, Link as ChakraLink, Flex, Text } from '@chakra-ui/react';
+import { Box, Button, Flex, Text } from '@chakra-ui/react';
 import { FaArrowLeft } from 'react-icons/fa6';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const DetailPosting = () => {
+  const navigate = useNavigate();
   return (
     <Box>
       <Flex gap={4} align={'center'}>
-        <ChakraLink>
-          <Link to={'/'}>
-            <FaArrowLeft size={25} />
-          </Link>
-        </ChakraLink>
+        <Button bg={'transparent'} onClick={() => navigate(-1)}>
+          <FaArrowLeft color="white" size={25} />
+        </Button>
         <Text textStyle={'2xl'}>Status</Text>
       </Flex>
       <DetailComponents />

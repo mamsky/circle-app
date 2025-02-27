@@ -8,6 +8,7 @@ import ForgotpasswordPage from '@/pages/forgot-password-pages';
 import HomePage from '@/pages/home';
 import LoginPage from '@/pages/login-Page';
 import Profile from '@/pages/profile';
+import ProfileUser from '@/pages/profile-user';
 import RegisterPage from '@/pages/register-page';
 import ResetPasswordPage from '@/pages/reset-password-page';
 import Search from '@/pages/search';
@@ -39,15 +40,19 @@ const router = createBrowserRouter(
           path: '/detail-post/:id',
           element: <DetailPosting />,
         },
+        {
+          path: '/detail-image/:id',
+          element: <CardDetailImage />,
+        },
+        {
+          path: '/profile/user/:id',
+          element: <ProfileUser />,
+        },
       ],
     },
     {
       element: <AuthLayout />,
       children: [
-        {
-          path: '/detail-image/:id',
-          element: <CardDetailImage />,
-        },
         {
           path: '/login',
           element: <LoginPage />,
